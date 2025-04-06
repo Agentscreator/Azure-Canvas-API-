@@ -1,29 +1,18 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Image from "next/image"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { ChevronRight } from "lucide-react"
+import { useState } from "react";
+import Image from "next/image";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ChevronRight } from "lucide-react";
 
 export function LocationsList() {
-  // Add state to track which location detail to show
-  const [selectedLocation, setSelectedLocation] = useState<number | null>(null)
+  const [selectedLocation, setSelectedLocation] = useState<number | null>(null);
 
-  // Function to handle showing location details
   const handleShowDetails = (locationId: number) => {
-    // You would implement logic here to show the location detail
-    // For now, we'll just log it
-    console.log(`Showing details for location ${locationId}`)
-    setSelectedLocation(locationId)
-
-    // Find the LocationDetail component and make it visible
-    // This would typically be done through state or context
-    const detailElement = document.querySelector("[data-location-detail]")
-    if (detailElement) {
-      detailElement.style.display = "block"
-    }
-  }
+    console.log(`Showing details for location ${locationId}`);
+    setSelectedLocation(locationId);
+  };
 
   return (
     <div className="mb-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -32,8 +21,14 @@ export function LocationsList() {
           key={location.id}
           className="overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
         >
-          <div className="relative h-36">
-            <Image src={location.image || "/placeholder.svg"} alt={location.name} fill className="object-cover" />
+          <div className="relative h-36 w-full">
+            <Image
+              src={location.image}
+              alt={location.name}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+            />
             <div
               className={`absolute right-3 top-3 rounded-full px-2 py-1 text-xs font-bold text-white ${getAvailabilityColor(location.availabilityPercentage)}`}
             >
@@ -77,7 +72,7 @@ export function LocationsList() {
         </Card>
       ))}
     </div>
-  )
+  );
 }
 
 const locations = [
@@ -89,7 +84,7 @@ const locations = [
     availableSpaces: 24,
     totalSpaces: 32,
     availabilityPercentage: 75,
-    image: "/placeholder.svg?height=144&width=300",
+    image: "https://lh3.googleusercontent.com/p/AF1QipNVELo6-qBtV29rZbx8cvt8GgkI-aYO4F9kYekg=s1360-w1360-h1020",
   },
   {
     id: 2,
@@ -99,7 +94,7 @@ const locations = [
     availableSpaces: 9,
     totalSpaces: 20,
     availabilityPercentage: 45,
-    image: "/placeholder.svg?height=144&width=300",
+    image: "https://i.redd.it/3n3j0ttqf2751.jpg",
   },
   {
     id: 3,
@@ -109,7 +104,7 @@ const locations = [
     availableSpaces: 3,
     totalSpaces: 25,
     availabilityPercentage: 12,
-    image: "/placeholder.svg?height=144&width=300",
+    image: "https://stpetecatalyst.com/wp-content/uploads/2024/08/USFSP-School-of-Business-scaled.jpg", // Direct image URL
   },
   {
     id: 4,
@@ -119,31 +114,31 @@ const locations = [
     availableSpaces: 12,
     totalSpaces: 15,
     availabilityPercentage: 80,
-    image: "/placeholder.svg?height=144&width=300",
+    image: "https://hscweb3.hsc.usf.edu/nursingnews/files/2023/01/Screen-Shot-2023-01-27-at-4.57.12-PM.png",
   },
-]
+];
 
+// Utility functions remain unchanged
 function getAvailabilityColor(percentage: number) {
-  if (percentage >= 60) return "bg-green-500"
-  if (percentage >= 30) return "bg-yellow-500"
-  return "bg-red-500"
+  if (percentage >= 60) return "bg-green-500";
+  if (percentage >= 30) return "bg-yellow-500";
+  return "bg-red-500";
 }
 
 function getAvailabilityBarColor(percentage: number) {
-  if (percentage >= 60) return "bg-green-500"
-  if (percentage >= 30) return "bg-yellow-500"
-  return "bg-red-500"
+  if (percentage >= 60) return "bg-green-500";
+  if (percentage >= 30) return "bg-yellow-500";
+  return "bg-red-500";
 }
 
 function getAvailabilityTextColor(percentage: number) {
-  if (percentage >= 60) return "text-green-600 dark:text-green-400"
-  if (percentage >= 30) return "text-yellow-600 dark:text-yellow-400"
-  return "text-red-600 dark:text-red-400"
+  if (percentage >= 60) return "text-green-600 dark:text-green-400";
+  if (percentage >= 30) return "text-yellow-600 dark:text-yellow-400";
+  return "text-red-600 dark:text-red-400";
 }
 
 function getAvailabilityText(percentage: number) {
-  if (percentage >= 60) return "High Availability"
-  if (percentage >= 30) return "Medium Availability"
-  return "Low Availability"
+  if (percentage >= 60) return "High Availability";
+  if (percentage >= 30) return "Medium Availability";
+  return "Low Availability";
 }
-

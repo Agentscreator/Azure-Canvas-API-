@@ -1,6 +1,5 @@
 import { Navbar } from "@/components/navbar"
 import { BottomNav } from "@/components/bottom-nav"
-import { CampusMap } from "@/components/campus-map"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
@@ -96,3 +95,16 @@ const buildingsList = [
   },
 ]
 
+// CampusMap Component
+const CampusMap = () => {
+  return (
+    <div className="w-full h-[500px] bg-gray-100 flex items-center justify-center">
+      <iframe
+        src="https://docs.google.com/viewer?url=https://www.usf.edu/administrative-services/parking/documents/campus-map-directory.pdf&embedded=true"
+        width="100%"
+        height="100%"
+        title="USF Campus Map"
+      ></iframe>
+    </div>
+  );
+};

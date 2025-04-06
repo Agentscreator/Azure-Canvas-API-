@@ -1,42 +1,92 @@
-"use client"
-
-import type React from "react"
-
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useToast } from "@/components/ui/use-toast"
-import { Camera, Upload, X, Check, AlertCircle } from "lucide-react"
+"use client";
+import React, { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast";
+import { Camera, Upload, X, Check, AlertCircle } from "lucide-react";
 
 export function PhotoUploader() {
-  const { toast } = useToast()
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [preview, setPreview] = useState<string | null>(null)
-  const [location, setLocation] = useState("")
-  const [isUploading, setIsUploading] = useState(false)
-  const [prediction, setPrediction] = useState<string | null>(null)
+  const { toast } = useToast();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [location, setLocation] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const [prediction, setPrediction] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0]
-      setSelectedFile(file)
+      const file = e.target.files[0];
+      setSelectedFile(file);
 
-      // Create preview
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onload = (e) => {
         if (e.target?.result) {
-          setPreview(e.target.result as string)
+          setPreview(e.target.result as string);
         }
-      }
-      reader.readAsDataURL(file)
+      };
+      reader.readAsDataURL(file);
 
-      // Reset prediction
-      setPrediction(null)
+      setPrediction(null); // Reset prediction on new file selection
     }
-  }
+  };
+
+  const predictOccupancy = async (imageFile: File) => {
+    const predictionKey = "55e3fad970d743ce9cd4cf8bf3f24a4f";
+    const endpoint = "https://southcentralus.api.cognitive.microsoft.com/";
+    const projectId = "3858b3b0-e70f-4d55-b09b-d06cfa3872a5";
+    const iterationName = "josh_study_density"; // Ensure this matches your Custom Vision iteration
+
+    const url = `${endpoint}/customvision/v3.0/Prediction/${projectId}/classify/iterations/${iterationName}/image`;
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Prediction-Key": predictionKey,
+          "Content-Type": "application/octet-stream",
+        },
+        body: imageFile,
+      });
+
+      if (!response.ok) {
+        throw new Error("API call failed: " + response.statusText);
+      }
+
+      const result = await response.json();
+      console.log("Prediction Result:", result);
+
+      // Find the most confident prediction among relevant tags
+      const relevantTags = ["Empty", "Medium", "Full"];
+      const prediction = result.predictions
+        .filter((p: any) => relevantTags.includes(p.tagName))
+        .sort((a: any, b: any) => b.probability - a.probability)[0];
+
+      if (prediction) {
+        return prediction.tagName;
+      } else {
+        throw new Error("No relevant prediction found");
+      }
+    } catch (error) {
+      console.error("Prediction error:", error);
+      throw error;
+    }
+  };
 
   const handleUpload = async () => {
     if (!selectedFile || !location) {
@@ -44,55 +94,48 @@ export function PhotoUploader() {
         title: "Missing information",
         description: "Please select a location and upload an image",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setIsUploading(true)
+    setIsUploading(true);
 
     try {
-      // Simulate the Azure function call
-      // In a real app, you would call the actual Azure function
-      // const result = await predictOccupancy(selectedFile)
-
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      // Simulate random prediction for demo
-      const results = ["Empty", "Medium", "Full"]
-      const randomPrediction = results[Math.floor(Math.random() * results.length)]
-
-      setPrediction(randomPrediction)
+      const result = await predictOccupancy(selectedFile);
+      setPrediction(result);
 
       toast({
         title: "Upload successful",
-        description: `The study area is predicted to be: ${randomPrediction}`,
-      })
+        description: `The study area is predicted to be: ${result}`,
+      });
     } catch (error) {
       toast({
         title: "Upload failed",
         description: "There was an error processing your image",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsUploading(false)
+      setIsUploading(false);
     }
-  }
+  };
 
   const clearSelection = () => {
-    setSelectedFile(null)
-    setPreview(null)
-    setPrediction(null)
-  }
+    setSelectedFile(null);
+    setPreview(null);
+    setPrediction(null);
+  };
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Upload Study Area Photo</CardTitle>
-          <CardDescription>Take a photo of a study area to help others see its current occupancy</CardDescription>
+          <CardDescription>
+            Take a photo of a study area to help others see its current occupancy
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Location Selector */}
           <div className="space-y-1">
             <Label htmlFor="location">Location</Label>
             <Select value={location} onValueChange={setLocation}>
@@ -113,6 +156,7 @@ export function PhotoUploader() {
             </Select>
           </div>
 
+          {/* Photo Upload Area */}
           <div className="space-y-1">
             <Label htmlFor="photo">Photo</Label>
             <div className="mt-2">
@@ -120,7 +164,9 @@ export function PhotoUploader() {
                 <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 p-6 dark:border-gray-600">
                   <Camera className="mb-2 h-8 w-8 text-muted-foreground" />
                   <div className="space-y-1 text-center">
-                    <p className="text-sm text-muted-foreground">Upload a photo of the study area</p>
+                    <p className="text-sm text-muted-foreground">
+                      Upload a photo of the study area
+                    </p>
                     <div className="flex justify-center">
                       <Label
                         htmlFor="file-upload"
@@ -136,7 +182,9 @@ export function PhotoUploader() {
                         />
                       </Label>
                     </div>
-                    <p className="text-xs text-muted-foreground">PNG, JPG, GIF up to 10MB</p>
+                    <p className="text-xs text-muted-foreground">
+                      PNG, JPG, GIF up to 10MB
+                    </p>
                   </div>
                 </div>
               ) : (
@@ -160,8 +208,8 @@ export function PhotoUploader() {
                         prediction === "Empty"
                           ? "bg-green-500"
                           : prediction === "Medium"
-                            ? "bg-yellow-500"
-                            : "bg-red-500"
+                          ? "bg-yellow-500"
+                          : "bg-red-500"
                       }`}
                     >
                       <div className="flex items-center justify-center gap-1 text-sm font-medium">
@@ -180,7 +228,11 @@ export function PhotoUploader() {
           </div>
         </CardContent>
         <CardFooter>
-          <Button className="w-full gap-2" onClick={handleUpload} disabled={!selectedFile || !location || isUploading}>
+          <Button
+            className="w-full gap-2"
+            onClick={handleUpload}
+            disabled={!selectedFile || !location || isUploading}
+          >
             {isUploading ? (
               <>
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
@@ -195,68 +247,6 @@ export function PhotoUploader() {
           </Button>
         </CardFooter>
       </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Uploads</CardTitle>
-          <CardDescription>Your recently uploaded study area photos</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-            {recentUploads.map((upload) => (
-              <div key={upload.id} className="overflow-hidden rounded-lg border">
-                <div className="relative aspect-video">
-                  <img
-                    src={upload.image || "/placeholder.svg"}
-                    alt={upload.location}
-                    className="h-full w-full object-cover"
-                  />
-                  <div
-                    className={`absolute bottom-0 left-0 right-0 p-1 text-center text-xs font-medium text-white ${
-                      upload.status === "Empty"
-                        ? "bg-green-500"
-                        : upload.status === "Medium"
-                          ? "bg-yellow-500"
-                          : "bg-red-500"
-                    }`}
-                  >
-                    {upload.status}
-                  </div>
-                </div>
-                <div className="p-2">
-                  <div className="text-sm font-medium">{upload.location}</div>
-                  <div className="text-xs text-muted-foreground">{upload.date}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
-  )
+  );
 }
-
-const recentUploads = [
-  {
-    id: 1,
-    location: "Library - 1st Floor",
-    status: "Medium",
-    date: "Today, 2:30 PM",
-    image: "/placeholder.svg?height=120&width=200",
-  },
-  {
-    id: 2,
-    location: "Engineering II - Lobby",
-    status: "Empty",
-    date: "Today, 10:15 AM",
-    image: "/placeholder.svg?height=120&width=200",
-  },
-  {
-    id: 3,
-    location: "Business - Study Room 3",
-    status: "Full",
-    date: "Yesterday, 4:45 PM",
-    image: "/placeholder.svg?height=120&width=200",
-  },
-]
-
